@@ -1,0 +1,28 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+whistle_pool = "GVCmM3m5vPXW8sqr6391ugSq2teFMCaHa6jTfdJDcBKE"
+whistle_merkle = "6tjTyuNsqu9eDGwe2gnLHBr41XHg1rqh3zcCneo7vMjx"
+whistle_verifier = "Ay7LBFvPcENjx8PpzwHdKvALvxs9B9GJdy7mwCXFBUUv"
+
+[programs.devnet]
+whistle_pool = "7H6GXuDXHaErfMgz5xYhDgpZVhUhWUFkhqgbw5iQrUfV"
+whistle_merkle = "C81ewP6VfPibPEYWirQ9A18bCoceRdCXmMbXv33zm9vC"
+whistle_verifier = "7vBdkq62GbtXjoJydEEjn996kkr8kcbgrZcGbe7zSj1u"
+
+[programs.mainnet]
+whistle_pool = "GVCmM3m5vPXW8sqr6391ugSq2teFMCaHa6jTfdJDcBKE"
+whistle_merkle = "6tjTyuNsqu9eDGwe2gnLHBr41XHg1rqh3zcCneo7vMjx"
+whistle_verifier = "Ay7LBFvPcENjx8PpzwHdKvALvxs9B9GJdy7mwCXFBUUv"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "devnet"
+wallet = "../keys/deploy-wallet.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
