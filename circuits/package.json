@@ -1,0 +1,17 @@
+{
+  "name": "whistle-circuits",
+  "version": "1.0.0",
+  "description": "Whistle Protocol ZK Circuits",
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "setup": "node scripts/setup.js",
+    "prove": "node scripts/prove.js",
+    "test": "node test-circuit.js"
+  },
+  "dependencies": {
+    "snarkjs": "^0.7.0",
+    "circomlib": "^2.0.5",
+    "ffjavascript": "^0.2.60"
+  }
+}
+
