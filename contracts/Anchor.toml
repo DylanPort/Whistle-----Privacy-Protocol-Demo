@@ -3,19 +3,19 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-whistle_pool = "GVCmM3m5vPXW8sqr6391ugSq2teFMCaHa6jTfdJDcBKE"
-whistle_merkle = "6tjTyuNsqu9eDGwe2gnLHBr41XHg1rqh3zcCneo7vMjx"
-whistle_verifier = "Ay7LBFvPcENjx8PpzwHdKvALvxs9B9GJdy7mwCXFBUUv"
+whistle_pool = "8A6rYQ7Kf7aqg8JkU7z6W83wCZvmohND7wiXPBhkpowx"
+whistle_merkle = "GSCeQ9qUybayPEUULjBu7Gk8p89g97FkoGgTeUE11tmk"
+whistle_verifier = "C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4"
 
 [programs.devnet]
-whistle_pool = "7H6GXuDXHaErfMgz5xYhDgpZVhUhWUFkhqgbw5iQrUfV"
-whistle_merkle = "C81ewP6VfPibPEYWirQ9A18bCoceRdCXmMbXv33zm9vC"
-whistle_verifier = "7vBdkq62GbtXjoJydEEjn996kkr8kcbgrZcGbe7zSj1u"
+whistle_pool = "8A6rYQ7Kf7aqg8JkU7z6W83wCZvmohND7wiXPBhkpowx"
+whistle_merkle = "GSCeQ9qUybayPEUULjBu7Gk8p89g97FkoGgTeUE11tmk"
+whistle_verifier = "C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4"
 
 [programs.mainnet]
-whistle_pool = "GVCmM3m5vPXW8sqr6391ugSq2teFMCaHa6jTfdJDcBKE"
-whistle_merkle = "6tjTyuNsqu9eDGwe2gnLHBr41XHg1rqh3zcCneo7vMjx"
-whistle_verifier = "Ay7LBFvPcENjx8PpzwHdKvALvxs9B9GJdy7mwCXFBUUv"
+whistle_pool = "8A6rYQ7Kf7aqg8JkU7z6W83wCZvmohND7wiXPBhkpowx"
+whistle_merkle = "GSCeQ9qUybayPEUULjBu7Gk8p89g97FkoGgTeUE11tmk"
+whistle_verifier = "C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4"
 
 [registry]
 url = "https://api.apr.dev"

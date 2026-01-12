@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::alt_bn128::prelude::*;
 
-declare_id!("7vBdkq62GbtXjoJydEEjn996kkr8kcbgrZcGbe7zSj1u");
+declare_id!("C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4");
 
 /// Whistle Protocol Groth16 Verifier
 /// 

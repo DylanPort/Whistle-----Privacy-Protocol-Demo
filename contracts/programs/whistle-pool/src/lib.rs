@@ -2,10 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_lang::solana_program::alt_bn128::prelude::*;
 
-declare_id!("7H6GXuDXHaErfMgz5xYhDgpZVhUhWUFkhqgbw5iQrUfV");
+declare_id!("8A6rYQ7Kf7aqg8JkU7z6W83wCZvmohND7wiXPBhkpowx");
 
 /// Verifier Program ID
-pub const VERIFIER_PROGRAM_ID: Pubkey = pubkey!("7vBdkq62GbtXjoJydEEjn996kkr8kcbgrZcGbe7zSj1u");
+pub const VERIFIER_PROGRAM_ID: Pubkey = pubkey!("C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4");
 
 /// Whistle Protocol Privacy Pool
 /// 
