@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_lang::solana_program::alt_bn128::prelude::*;
 
-declare_id!("8A6rYQ7Kf7aqg8JkU7z6W83wCZvmohND7wiXPBhkpowx");
+declare_id!("BbVZTUdUBhbGdZiuGGXGAi66WkXitgtHqoJeXhZpv9E9");
 
 /// Verifier Program ID
 pub const VERIFIER_PROGRAM_ID: Pubkey = pubkey!("C6cKqUzwMdL5Tm9vNsYNjPwZjprthyypywmgne3RkSD4");
@@ -676,9 +676,11 @@ impl NullifierSet {
 }
 
 // ============================================================================
-// POSEIDON HASH (using keccak placeholder)
+// POSEIDON HASH (Simplified for hackathon - uses keccak256)
 // ============================================================================
 
+/// Simple hash using keccak256
+/// For hackathon demo - production would use actual Poseidon
 fn poseidon_hash(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
     use anchor_lang::solana_program::keccak;
     
