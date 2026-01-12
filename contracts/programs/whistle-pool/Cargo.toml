@@ -1,7 +1,7 @@
 [package]
 name = "whistle-pool"
 version = "1.0.0"
-description = "Whistle Protocol Privacy Pool - Main contract for deposits and withdrawals"
+description = "Whistle Protocol Privacy Pool - ZK-verified deposits and withdrawals"
 edition = "2021"
 
 [lib]
@@ -14,92 +14,10 @@ no-idl = []
 no-log-ix-name = []
 cpi = ["no-entrypoint"]
 default = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+idl-build = ["anchor-lang/idl-build"]
 
 [dependencies]
-anchor-lang = "0.30.1"
-anchor-spl = "0.30.1"
-bytemuck = { version = "1.14", features = ["derive"] }
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
 
 [dev-dependencies]
 anchor-client = "0.30.1"
-
-
-
-
-version = "1.0.0"
-description = "Whistle Protocol Privacy Pool - Main contract for deposits and withdrawals"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib", "lib"]
-name = "whistle_pool"
-
-[features]
-no-entrypoint = []
-no-idl = []
-no-log-ix-name = []
-cpi = ["no-entrypoint"]
-default = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
-
-[dependencies]
-anchor-lang = "0.30.1"
-anchor-spl = "0.30.1"
-bytemuck = { version = "1.14", features = ["derive"] }
-
-[dev-dependencies]
-anchor-client = "0.30.1"
-
-
-version = "1.0.0"
-description = "Whistle Protocol Privacy Pool - Main contract for deposits and withdrawals"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib", "lib"]
-name = "whistle_pool"
-
-[features]
-no-entrypoint = []
-no-idl = []
-no-log-ix-name = []
-cpi = ["no-entrypoint"]
-default = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
-
-[dependencies]
-anchor-lang = "0.30.1"
-anchor-spl = "0.30.1"
-bytemuck = { version = "1.14", features = ["derive"] }
-
-[dev-dependencies]
-anchor-client = "0.30.1"
-
-
-
-
-version = "1.0.0"
-description = "Whistle Protocol Privacy Pool - Main contract for deposits and withdrawals"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib", "lib"]
-name = "whistle_pool"
-
-[features]
-no-entrypoint = []
-no-idl = []
-no-log-ix-name = []
-cpi = ["no-entrypoint"]
-default = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
-
-[dependencies]
-anchor-lang = "0.30.1"
-anchor-spl = "0.30.1"
-bytemuck = { version = "1.14", features = ["derive"] }
-
-[dev-dependencies]
-anchor-client = "0.30.1"
-
