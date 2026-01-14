@@ -4,7 +4,10 @@ use anchor_lang::solana_program::alt_bn128::prelude::*;
 use anchor_lang::solana_program::keccak;
 use bytemuck::{Pod, Zeroable};
 
-declare_id!("FwWrMMMPjSj1Rk2zSTZ5bY5kz7Rx8ZAcdk2NQkV4xyQV");
+pub mod groth16;
+use groth16::verify_withdraw_proof_groth16;
+
+declare_id!("6juimdEmwGPbDwV6WX9Jr3FcvKTKXb7oreb53RzBKbNu");
 
 /// Whistle Protocol - Shielded Balance Privacy Pool
 /// 
@@ -19,11 +22,16 @@ declare_id!("FwWrMMMPjSj1Rk2zSTZ5bY5kz7Rx8ZAcdk2NQkV4xyQV");
 /// Uses Groth16 proofs verified via alt_bn128 elliptic curve operations.
 
 // Fixed withdrawal denominations for maximum anonymity
-pub const DENOM_1_SOL: u64 = 1_000_000_000;
-pub const DENOM_10_SOL: u64 = 10_000_000_000;
-pub const DENOM_100_SOL: u64 = 100_000_000_000;
+// Devnet testing denominations (smaller for testing)
+pub const DENOM_001_SOL: u64 = 10_000_000;    // 0.01 SOL
+pub const DENOM_005_SOL: u64 = 50_000_000;    // 0.05 SOL
+pub const DENOM_01_SOL: u64 = 100_000_000;    // 0.1 SOL
+// Mainnet denominations
+pub const DENOM_1_SOL: u64 = 1_000_000_000;   // 1 SOL
+pub const DENOM_10_SOL: u64 = 10_000_000_000; // 10 SOL
+pub const DENOM_100_SOL: u64 = 100_000_000_000; // 100 SOL
 
-// Minimum deposit to prevent dust spam (lowered for hackathon demo)
+// Minimum deposit to prevent dust spam
 pub const MIN_DEPOSIT: u64 = 10_000_000; // 0.01 SOL
 
 #[program]
@@ -130,6 +138,9 @@ pub mod whistle_pool {
     ) -> Result<()> {
         // Withdrawal must be fixed denomination
         require!(
+            withdrawal_amount == DENOM_001_SOL ||
+            withdrawal_amount == DENOM_005_SOL ||
+            withdrawal_amount == DENOM_01_SOL ||
             withdrawal_amount == DENOM_1_SOL ||
             withdrawal_amount == DENOM_10_SOL ||
             withdrawal_amount == DENOM_100_SOL,
@@ -199,14 +210,39 @@ pub mod whistle_pool {
 
         // Transfer SOL from vault to recipient (minus fee)
         let withdrawal_net = withdrawal_amount - relayer_fee;
+        let vault_bump = ctx.bumps.pool_vault;
+        let vault_seeds: &[&[u8]] = &[b"vault", &[vault_bump]];
         
-        **ctx.accounts.pool_vault.try_borrow_mut_lamports()? -= withdrawal_net;
-        **ctx.accounts.recipient.try_borrow_mut_lamports()? += withdrawal_net;
+        // Transfer to recipient
+        anchor_lang::solana_program::program::invoke_signed(
+            &anchor_lang::solana_program::system_instruction::transfer(
+                ctx.accounts.pool_vault.key,
+                ctx.accounts.recipient.key,
+                withdrawal_net,
+            ),
+            &[
+                ctx.accounts.pool_vault.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[vault_seeds],
+        )?;
         
         // Pay relayer fee if any
         if relayer_fee > 0 {
-            **ctx.accounts.pool_vault.try_borrow_mut_lamports()? -= relayer_fee;
-            **ctx.accounts.relayer.try_borrow_mut_lamports()? += relayer_fee;
+            anchor_lang::solana_program::program::invoke_signed(
+                &anchor_lang::solana_program::system_instruction::transfer(
+                    ctx.accounts.pool_vault.key,
+                    ctx.accounts.relayer.key,
+                    relayer_fee,
+                ),
+                &[
+                    ctx.accounts.pool_vault.to_account_info(),
+                    ctx.accounts.relayer.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                &[vault_seeds],
+            )?;
         }
 
         pool.total_shielded -= withdrawal_amount;
@@ -371,6 +407,7 @@ pub mod whistle_pool {
         merkle_root: [u8; 32],
     ) -> Result<()> {
         require!(
+            amount == DENOM_001_SOL || amount == DENOM_005_SOL || amount == DENOM_01_SOL ||
             amount == DENOM_1_SOL || amount == DENOM_10_SOL || amount == DENOM_100_SOL,
             WhistleError::InvalidWithdrawDenomination
         );
@@ -408,13 +445,38 @@ pub mod whistle_pool {
         nullifiers.mark_spent(&nullifier_hash)?;
 
         let withdrawal_net = amount - relayer_fee;
+        let vault_bump = ctx.bumps.pool_vault;
+        let vault_seeds: &[&[u8]] = &[b"vault", &[vault_bump]];
         
-        **ctx.accounts.pool_vault.try_borrow_mut_lamports()? -= withdrawal_net;
-        **ctx.accounts.recipient.try_borrow_mut_lamports()? += withdrawal_net;
+        // Transfer to recipient
+        anchor_lang::solana_program::program::invoke_signed(
+            &anchor_lang::solana_program::system_instruction::transfer(
+                ctx.accounts.pool_vault.key,
+                ctx.accounts.recipient.key,
+                withdrawal_net,
+            ),
+            &[
+                ctx.accounts.pool_vault.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[vault_seeds],
+        )?;
         
         if relayer_fee > 0 {
-            **ctx.accounts.pool_vault.try_borrow_mut_lamports()? -= relayer_fee;
-            **ctx.accounts.relayer.try_borrow_mut_lamports()? += relayer_fee;
+            anchor_lang::solana_program::program::invoke_signed(
+                &anchor_lang::solana_program::system_instruction::transfer(
+                    ctx.accounts.pool_vault.key,
+                    ctx.accounts.relayer.key,
+                    relayer_fee,
+                ),
+                &[
+                    ctx.accounts.pool_vault.to_account_info(),
+                    ctx.accounts.relayer.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                &[vault_seeds],
+            )?;
         }
 
         pool.total_shielded -= amount;
@@ -425,6 +487,159 @@ pub mod whistle_pool {
             has_change: false,
             timestamp: Clock::get()?.unix_timestamp,
         });
+
+        Ok(())
+    }
+
+    /// ZK Withdraw - Simplified for hackathon
+    /// Verifies: nullifier not spent + ZK proof of knowledge
+    /// Note: Simplified circuit doesn't verify Merkle membership
+    /// ZK-verified withdrawal using Groth16 proofs
+    /// 
+    /// Proves:
+    /// 1. Knowledge of (secret, nullifier) that produces a commitment
+    /// 2. Nullifier hash is correctly computed
+    /// 3. Binds recipient to prevent front-running
+    /// 
+    /// The prover never reveals secret or nullifier!
+    pub fn withdraw_zk(
+        ctx: Context<WithdrawZk>,
+        proof_a: [u8; 64],
+        proof_b: [u8; 128],
+        proof_c: [u8; 64],
+        commitment: [u8; 32],   // The commitment being spent
+        nullifier_hash: [u8; 32],
+        recipient: Pubkey,
+        amount: u64,
+        relayer_fee: u64,
+    ) -> Result<()> {
+        msg!("=== ZK WITHDRAWAL START ===");
+        
+        // Validate denomination
+        require!(
+            amount == DENOM_001_SOL || amount == DENOM_005_SOL || amount == DENOM_01_SOL ||
+            amount == DENOM_1_SOL || amount == DENOM_10_SOL || amount == DENOM_100_SOL,
+            WhistleError::InvalidWithdrawDenomination
+        );
+
+        require!(relayer_fee <= amount / 10, WhistleError::FeeTooHigh);
+
+        let pool = &mut ctx.accounts.pool;
+        let nullifiers = &mut ctx.accounts.nullifiers.load_mut()?;
+
+        // Check nullifier not already spent (prevents double-spend)
+        require!(
+            !nullifiers.is_spent(&nullifier_hash),
+            WhistleError::NullifierAlreadyUsed
+        );
+        msg!("✓ Nullifier not spent");
+
+        // Prepare recipient as field element (truncate to 31 bytes to fit BN254 field)
+        let recipient_bytes = recipient.to_bytes();
+        let mut recipient_field = [0u8; 32];
+        recipient_field[1..].copy_from_slice(&recipient_bytes[..31]);
+        
+        // Verify the Groth16 ZK proof
+        msg!("Verifying Groth16 proof...");
+        let proof_valid = verify_withdraw_proof_groth16(
+            &proof_a,
+            &proof_b,
+            &proof_c,
+            &commitment,
+            &nullifier_hash,
+            &recipient_field,
+            amount,
+            relayer_fee,
+        )?;
+
+        require!(proof_valid, WhistleError::InvalidProof);
+
+        // Mark nullifier as spent
+        nullifiers.mark_spent(&nullifier_hash)?;
+
+        // Transfer SOL
+        let withdrawal_net = amount - relayer_fee;
+        let vault_bump = ctx.bumps.pool_vault;
+        let vault_seeds: &[&[u8]] = &[b"vault", &[vault_bump]];
+        
+        anchor_lang::solana_program::program::invoke_signed(
+            &anchor_lang::solana_program::system_instruction::transfer(
+                ctx.accounts.pool_vault.key,
+                &recipient,
+                withdrawal_net,
+            ),
+            &[
+                ctx.accounts.pool_vault.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[vault_seeds],
+        )?;
+
+        // Pay relayer if any
+        if relayer_fee > 0 {
+            anchor_lang::solana_program::program::invoke_signed(
+                &anchor_lang::solana_program::system_instruction::transfer(
+                    ctx.accounts.pool_vault.key,
+                    ctx.accounts.relayer.key,
+                    relayer_fee,
+                ),
+                &[
+                    ctx.accounts.pool_vault.to_account_info(),
+                    ctx.accounts.relayer.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                &[vault_seeds],
+            )?;
+        }
+
+        pool.total_shielded -= amount;
+
+        emit!(WithdrawnZk {
+            nullifier_hash,
+            commitment,
+            amount,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+
+        msg!("ZK withdrawal: {} lamports verified and transferred", amount);
+
+        Ok(())
+    }
+
+    /// DEMO ONLY: Withdraw any amount for hackathon demonstration
+    /// This bypasses ZK verification - NEVER use in production!
+    pub fn demo_withdraw(
+        ctx: Context<DemoWithdraw>,
+        amount: u64,
+    ) -> Result<()> {
+        let pool = &mut ctx.accounts.pool;
+        
+        require!(amount > 0, WhistleError::AmountTooSmall);
+        require!(pool.total_shielded >= amount, WhistleError::InsufficientBalance);
+
+        // Get vault bump for PDA signing
+        let vault_bump = ctx.bumps.pool_vault;
+        let vault_seeds: &[&[u8]] = &[b"vault", &[vault_bump]];
+        
+        // Transfer SOL using invoke_signed
+        anchor_lang::solana_program::program::invoke_signed(
+            &anchor_lang::solana_program::system_instruction::transfer(
+                ctx.accounts.pool_vault.key,
+                ctx.accounts.recipient.key,
+                amount,
+            ),
+            &[
+                ctx.accounts.pool_vault.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[vault_seeds],
+        )?;
+
+        pool.total_shielded -= amount;
+
+        msg!("Demo withdrawal: {} lamports to {}", amount, ctx.accounts.recipient.key());
 
         Ok(())
     }
@@ -474,39 +689,23 @@ fn verify_withdraw_proof(
     proof_a: &[u8; 64],
     proof_b: &[u8; 128],
     proof_c: &[u8; 64],
-    merkle_root: &[u8; 32],
+    commitment: &[u8; 32],
     nullifier_hash: &[u8; 32],
     recipient: &[u8; 32],
     amount: u64,
     relayer_fee: u64,
 ) -> Result<bool> {
-    // For hackathon: verify structure, accept valid-looking proofs
-    // The off-chain snarkjs verification confirms the actual proof validity
-    
-    // Check proof points are on curve (basic sanity)
-    let a_valid = proof_a.iter().any(|&b| b != 0);
-    let b_valid = proof_b.iter().any(|&b| b != 0);
-    let c_valid = proof_c.iter().any(|&b| b != 0);
-    
-    if !a_valid || !b_valid || !c_valid {
-        return Ok(false);
-    }
-    
-    // Compute public inputs hash  
-    let mut input_data = Vec::with_capacity(32 * 3 + 16);
-    input_data.extend_from_slice(merkle_root);
-    input_data.extend_from_slice(nullifier_hash);
-    input_data.extend_from_slice(recipient);
-    input_data.extend_from_slice(&amount.to_le_bytes());
-    input_data.extend_from_slice(&relayer_fee.to_le_bytes());
-    
-    let _input_hash = keccak::hash(&input_data);
-    
-    // Get verification key
-    let vk = get_withdraw_vk();
-    
-    // Perform Groth16 pairing check
-    groth16_verify(proof_a, proof_b, proof_c, &[[0u8; 32]], &vk)
+    // Use the real Groth16 verifier from groth16 module
+    verify_withdraw_proof_groth16(
+        proof_a,
+        proof_b,
+        proof_c,
+        commitment,
+        nullifier_hash,
+        recipient,
+        amount,
+        relayer_fee,
+    )
 }
 
 /// Verify private transfer proof
@@ -761,6 +960,10 @@ impl RootsHistory {
     pub fn contains(&self, root: &[u8; 32]) -> bool {
         self.roots.iter().any(|r| r == root)
     }
+    
+    pub fn is_valid_root(&self, root: &[u8; 32]) -> bool {
+        self.contains(root)
+    }
 }
 
 // Compact NullifierSet for hackathon
@@ -962,6 +1165,65 @@ pub struct PrivateTransfer<'info> {
     pub roots_history: AccountLoader<'info, RootsHistory>,
 }
 
+#[derive(Accounts)]
+pub struct DemoWithdraw<'info> {
+    #[account(
+        mut,
+        seeds = [b"pool"],
+        bump = pool.bump
+    )]
+    pub pool: Account<'info, PoolState>,
+    
+    /// CHECK: Vault PDA
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub pool_vault: SystemAccount<'info>,
+    
+    /// CHECK: Recipient receives SOL
+    #[account(mut)]
+    pub recipient: AccountInfo<'info>,
+    
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct WithdrawZk<'info> {
+    #[account(
+        mut,
+        seeds = [b"pool"],
+        bump = pool.bump
+    )]
+    pub pool: Account<'info, PoolState>,
+    
+    #[account(
+        mut,
+        seeds = [b"nullifiers"],
+        bump
+    )]
+    pub nullifiers: AccountLoader<'info, NullifierSet>,
+    
+    /// CHECK: Vault PDA
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub pool_vault: SystemAccount<'info>,
+    
+    /// CHECK: Recipient receives SOL
+    #[account(mut)]
+    pub recipient: AccountInfo<'info>,
+    
+    /// CHECK: Relayer receives fee
+    #[account(mut)]
+    pub relayer: AccountInfo<'info>,
+    
+    pub system_program: Program<'info, System>,
+}
+
 // Alias for backward compatibility
 pub type Deposit<'info> = Shield<'info>;
 pub type Withdraw<'info> = Unshield<'info>;
@@ -990,6 +1252,14 @@ pub struct Unshielded {
     pub nullifier_hash: [u8; 32],
     pub withdrawal_amount: u64,
     pub has_change: bool,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct WithdrawnZk {
+    pub nullifier_hash: [u8; 32],
+    pub commitment: [u8; 32],
+    pub amount: u64,
     pub timestamp: i64,
 }
 
@@ -1049,4 +1319,16 @@ pub enum WhistleError {
     
     #[msg("Elliptic curve operation failed")]
     ECOperationFailed,
+    
+    #[msg("Insufficient shielded balance")]
+    InsufficientBalance,
+    
+    #[msg("Groth16 point addition failed")]
+    Groth16AdditionFailed,
+    
+    #[msg("Groth16 scalar multiplication failed")]
+    Groth16MultiplicationFailed,
+    
+    #[msg("Groth16 pairing check failed")]
+    Groth16PairingFailed,
 }
