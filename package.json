@@ -1,0 +1,12 @@
+{
+  "name": "whistle-protocol",
+  "version": "1.0.0",
+  "description": "Whistle Privacy Protocol - ZK-SNARKs based privacy for Solana",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "relayer",
+    "sdk",
+    "indexer"
+  ]
+}

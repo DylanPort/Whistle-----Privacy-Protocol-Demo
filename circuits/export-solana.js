@@ -9,6 +9,9 @@ console.log("=".repeat(60));
 console.log("GROTH16 PROOF FOR SOLANA");
 console.log("=".repeat(60));
 
+// BN254 base field prime for curve points (Fq)
+const BN254_BASE_FIELD = BigInt('21888242871839275222246405745257275088696311157297823662689037894645226208583');
+
 // Convert proof points to bytes
 function bigIntToBytes(str, size) {
     let n = BigInt(str);
@@ -24,10 +27,11 @@ function toHex(bytes) {
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Proof A (G1 point): 64 bytes
+// Proof A (G1 point): 64 bytes (negated Y for groth16-solana)
 const proofA_x = bigIntToBytes(proof.pi_a[0], 32);
-const proofA_y = bigIntToBytes(proof.pi_a[1], 32);
-const proofA = new Uint8Array([...proofA_x, ...proofA_y]);
+const proofA_y = BigInt(proof.pi_a[1]) % BN254_BASE_FIELD;
+const proofA_y_neg = proofA_y === 0n ? 0n : BN254_BASE_FIELD - proofA_y;
+const proofA = new Uint8Array([...proofA_x, ...bigIntToBytes(proofA_y_neg.toString(), 32)]);
 
 // Proof B (G2 point): 128 bytes
 // G2 has coordinates in Fp2 (each coordinate is 2 field elements)

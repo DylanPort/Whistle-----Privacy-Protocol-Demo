@@ -1,17 +1,26 @@
 {
   "name": "whistle-circuits",
-  "version": "1.0.0",
-  "description": "Whistle Protocol ZK Circuits",
+  "version": "2.0.0",
+  "description": "Whistle Protocol ZK Circuits - Production Ready",
   "scripts": {
     "compile": "node scripts/compile.js",
+    "compile:prod": "node scripts/compile-production.js",
     "setup": "node scripts/setup.js",
+    "setup:prod": "node scripts/trusted-setup.js",
+    "convert:vk": "node scripts/convert-vk-solana.js",
+    "generate:inputs": "node scripts/generate-test-inputs.js",
     "prove": "node scripts/prove.js",
-    "test": "node test-circuit.js"
+    "test": "node test-circuit.js",
+    "build:all": "npm run compile:prod && npm run setup:prod && npm run convert:vk"
   },
   "dependencies": {
-    "snarkjs": "^0.7.0",
+    "circom2": "^0.2.22",
     "circomlib": "^2.0.5",
-    "ffjavascript": "^0.2.60"
+    "circomlibjs": "^0.1.7",
+    "ffjavascript": "^0.2.60",
+    "snarkjs": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
   }
 }
-

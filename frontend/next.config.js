@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  basePath: '/privacy',
+  // basePath: '/privacy', // Uncomment for production if needed
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,

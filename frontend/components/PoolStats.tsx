@@ -5,7 +5,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { TrendingUp, Users, Lock, Activity, ExternalLink } from 'lucide-react'
 
-const POOL_PROGRAM_ID = new PublicKey('6juimdEmwGPbDwV6WX9Jr3FcvKTKXb7oreb53RzBKbNu')
+const POOL_PROGRAM_ID = new PublicKey('AMtxCTW99zCBfhukVdN8YvA3AsdSJ7nsgnUdHpth7QTD')
 
 export default function PoolStats() {
   const { connection } = useConnection()

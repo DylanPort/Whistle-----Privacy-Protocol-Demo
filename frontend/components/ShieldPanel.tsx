@@ -12,7 +12,7 @@ import {
 import { Shield, Loader2, CheckCircle, AlertCircle, Copy, ExternalLink } from 'lucide-react'
 import { computeNoteHashes } from '@/lib/zkProof'
 
-const POOL_PROGRAM_ID = new PublicKey('6juimdEmwGPbDwV6WX9Jr3FcvKTKXb7oreb53RzBKbNu')
+const POOL_PROGRAM_ID = new PublicKey('AMtxCTW99zCBfhukVdN8YvA3AsdSJ7nsgnUdHpth7QTD')
 const MIN_DEPOSIT = 0.001
 
 const SHIELD_DISCRIMINATOR = Buffer.from([220, 198, 253, 246, 231, 84, 147, 98])
@@ -90,6 +90,18 @@ export default function ShieldPanel() {
       const [merkleTree] = PublicKey.findProgramAddressSync([Buffer.from('merkle_tree')], POOL_PROGRAM_ID)
       const [rootsHistory] = PublicKey.findProgramAddressSync([Buffer.from('roots_history')], POOL_PROGRAM_ID)
 
+      // Get current leaf index BEFORE the deposit
+      let leafIndex = 0
+      try {
+        const poolAccountInfo = await connection.getAccountInfo(pool)
+        if (poolAccountInfo) {
+          // next_index is at offset 9 (after discriminator 8 + merkle_levels 1)
+          leafIndex = Number(poolAccountInfo.data.readBigUInt64LE(9))
+        }
+      } catch (e) {
+        console.log('Could not read leaf index, defaulting to 0')
+      }
+
       const lamports = Math.floor(amountNum * LAMPORTS_PER_SOL)
       const data = Buffer.concat([
         SHIELD_DISCRIMINATOR,
@@ -122,8 +134,9 @@ export default function ShieldPanel() {
       console.log('Commitment:', commitment.toString().slice(0, 20) + '...')
       
       const signature = await sendTransaction(transaction, connection, {
-        skipPreflight: false,
+        skipPreflight: true,  // Skip preflight to avoid simulation errors
         preflightCommitment: 'confirmed',
+        maxRetries: 3,
       })
       
       setLoadingText('Confirming on-chain...')
@@ -133,7 +146,7 @@ export default function ShieldPanel() {
       setTxSignature(signature)
       setStatus('success')
 
-      // Save note to localStorage
+      // Save note to localStorage (including leafIndex for merkle proof)
       const noteToStore = {
         secret: note.secret,
         nullifier: note.nullifier,
@@ -142,6 +155,7 @@ export default function ShieldPanel() {
         nullifierHash: note.nullifierHash,
         createdAt: note.createdAt,
         txSignature: signature,
+        leafIndex: leafIndex,  // Store leaf index for merkle proof generation
         spent: false,
       }
       

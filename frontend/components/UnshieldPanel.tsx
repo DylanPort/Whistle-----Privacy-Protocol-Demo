@@ -20,10 +20,11 @@ interface Note {
   nullifierHash: string
   createdAt: number
   txSignature?: string
+  leafIndex?: number
   spent: boolean
 }
 
-const POOL_PROGRAM_ID = new PublicKey('6juimdEmwGPbDwV6WX9Jr3FcvKTKXb7oreb53RzBKbNu')
+const POOL_PROGRAM_ID = new PublicKey('AMtxCTW99zCBfhukVdN8YvA3AsdSJ7nsgnUdHpth7QTD')
 // Relayer URL - auto-detect production vs development
 const RELAYER_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
   ? `${window.location.protocol}//${window.location.hostname}/privacy-api`  // Production (nginx proxy)
@@ -125,6 +126,9 @@ export default function UnshieldPanel() {
         recipient: recipientPubkey.toBytes(),
         withdrawAmount: withdrawAmountLamports,
         relayerFee: relayerFeeLamports,
+        // Include merkle proof data
+        leafIndex: selectedNote.leafIndex,
+        connection: connection,
       }
 
       const zkProof = await generateWithdrawProof(proofInput, (stage, pct) => {
@@ -138,7 +142,7 @@ export default function UnshieldPanel() {
       setProgressText('Sending to relayer...')
       setProgress(75)
 
-      // Send to relayer with full ZK proof
+      // Send to relayer with full ZK proof (production uses merkle root instead of commitment)
       const response = await fetch(`${RELAYER_URL}/withdraw`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,7 +150,7 @@ export default function UnshieldPanel() {
           proof_a: Array.from(zkProof.proof_a),
           proof_b: Array.from(zkProof.proof_b),
           proof_c: Array.from(zkProof.proof_c),
-          commitment: Array.from(zkProof.commitment),
+          merkleRoot: Array.from(zkProof.merkleRoot),
           nullifierHash: Array.from(zkProof.nullifierHash),
           recipient: recipientPubkey.toBase58(),
           amount: Number(zkProof.amount),

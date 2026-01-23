@@ -1,0 +1,35 @@
+{
+  "name": "@whistle/ceremony",
+  "version": "1.0.0",
+  "description": "Whistle Protocol - Trusted Setup Ceremony Contribution Tools",
+  "main": "contribute.js",
+  "scripts": {
+    "contribute": "node contribute.js",
+    "verify": "node verify.js",
+    "verify-chain": "node verify.js --full",
+    "genesis": "node genesis.js",
+    "download-latest": "node download.js",
+    "upload": "node upload.js",
+    "status": "node status.js"
+  },
+  "keywords": [
+    "zk-snark",
+    "trusted-setup",
+    "ceremony",
+    "groth16",
+    "whistle",
+    "privacy"
+  ],
+  "author": "Whistle Protocol",
+  "license": "MIT",
+  "dependencies": {
+    "snarkjs": "^0.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whistle-protocol/ceremony"
+  }
+}
