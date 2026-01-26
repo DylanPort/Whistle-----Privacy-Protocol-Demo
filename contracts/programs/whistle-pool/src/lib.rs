@@ -44,6 +44,11 @@ pub const DENOM_100_SOL: u64 = 100_000_000_000; // 100 SOL
 // Minimum deposit to prevent dust spam
 pub const MIN_DEPOSIT: u64 = 10_000_000; // 0.01 SOL
 
+// Protocol fee: 0.04% = 4 basis points (4/10000)
+// Accumulated in fee vault PDA, distributed to point holders
+pub const PROTOCOL_FEE_BPS: u64 = 4;
+pub const BPS_DENOMINATOR: u64 = 10000;
+
 #[program]
 pub mod whistle_pool {
     use super::*;
@@ -59,6 +64,7 @@ pub mod whistle_pool {
         pool.current_root = [0u8; 32];
         pool.total_deposits = 0;
         pool.total_shielded = 0;
+        pool.total_fees_collected = 0;
         pool.bump = ctx.bumps.pool;
         
         emit!(PoolInitialized {
@@ -95,6 +101,7 @@ pub mod whistle_pool {
     /// 
     /// Creates a note commitment: hash(secret, nullifier, amount)
     /// The amount is hidden inside the note, only the depositor knows it.
+    /// Protocol fee (0.04%) is collected and sent to fee vault.
     pub fn shield(ctx: Context<Shield>, commitment: [u8; 32], amount: u64) -> Result<()> {
         require!(amount >= MIN_DEPOSIT, WhistleError::AmountTooSmall);
         
@@ -104,7 +111,15 @@ pub mod whistle_pool {
         let max_leaves = 1u64 << pool.merkle_levels;
         require!(pool.next_index < max_leaves, WhistleError::TreeFull);
         
-        // Transfer SOL to vault
+        // Calculate protocol fee (0.04%)
+        let protocol_fee = amount.checked_mul(PROTOCOL_FEE_BPS)
+            .ok_or(WhistleError::ArithmeticOverflow)?
+            .checked_div(BPS_DENOMINATOR)
+            .ok_or(WhistleError::ArithmeticOverflow)?;
+        let net_amount = amount.checked_sub(protocol_fee)
+            .ok_or(WhistleError::ArithmeticOverflow)?;
+        
+        // Transfer net amount to main vault
         let cpi_context = CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
@@ -112,7 +127,22 @@ pub mod whistle_pool {
                 to: ctx.accounts.pool_vault.to_account_info(),
             },
         );
-        system_program::transfer(cpi_context, amount)?;
+        system_program::transfer(cpi_context, net_amount)?;
+        
+        // Transfer protocol fee to fee vault
+        if protocol_fee > 0 {
+            let fee_cpi = CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.depositor.to_account_info(),
+                    to: ctx.accounts.fee_vault.to_account_info(),
+                },
+            );
+            system_program::transfer(fee_cpi, protocol_fee)?;
+            
+            pool.total_fees_collected = pool.total_fees_collected.checked_add(protocol_fee)
+                .ok_or(WhistleError::ArithmeticOverflow)?;
+        }
         
         // Add commitment to Merkle tree
         let leaf_index = pool.next_index;
@@ -121,9 +151,9 @@ pub mod whistle_pool {
         pool.current_root = merkle_tree.get_root(pool.merkle_levels);
         pool.next_index = pool.next_index.checked_add(1)
             .ok_or(WhistleError::ArithmeticOverflow)?;
-        pool.total_deposits = pool.total_deposits.checked_add(amount)
+        pool.total_deposits = pool.total_deposits.checked_add(net_amount)
             .ok_or(WhistleError::ArithmeticOverflow)?;
-        pool.total_shielded = pool.total_shielded.checked_add(amount)
+        pool.total_shielded = pool.total_shielded.checked_add(net_amount)
             .ok_or(WhistleError::ArithmeticOverflow)?;
         
         // Store root in history
@@ -135,7 +165,8 @@ pub mod whistle_pool {
         emit!(Shielded {
             commitment,
             leaf_index,
-            amount,
+            amount: net_amount,
+            protocol_fee,
             timestamp: Clock::get()?.unix_timestamp,
         });
         
@@ -247,12 +278,21 @@ pub mod whistle_pool {
             });
         }
 
-        // SECURITY FIX: Verify vault has sufficient balance
+        // Verify vault has sufficient balance
         let vault_balance = ctx.accounts.pool_vault.lamports();
         require!(vault_balance >= withdrawal_amount, WhistleError::InsufficientVaultBalance);
 
-        // Transfer SOL from vault to recipient (minus fee)
-        let withdrawal_net = withdrawal_amount.checked_sub(relayer_fee)
+        // Calculate protocol fee (0.04%)
+        let protocol_fee = withdrawal_amount.checked_mul(PROTOCOL_FEE_BPS)
+            .ok_or(WhistleError::ArithmeticOverflow)?
+            .checked_div(BPS_DENOMINATOR)
+            .ok_or(WhistleError::ArithmeticOverflow)?;
+        
+        // Transfer SOL from vault to recipient (minus relayer fee and protocol fee)
+        let withdrawal_net = withdrawal_amount
+            .checked_sub(relayer_fee)
+            .ok_or(WhistleError::ArithmeticOverflow)?
+            .checked_sub(protocol_fee)
             .ok_or(WhistleError::ArithmeticOverflow)?;
         let vault_bump = ctx.bumps.pool_vault;
         let vault_seeds: &[&[u8]] = &[b"vault", &[vault_bump]];
@@ -288,6 +328,26 @@ pub mod whistle_pool {
                 &[vault_seeds],
             )?;
         }
+        
+        // Transfer protocol fee to fee vault
+        if protocol_fee > 0 {
+            anchor_lang::solana_program::program::invoke_signed(
+                &anchor_lang::solana_program::system_instruction::transfer(
+                    ctx.accounts.pool_vault.key,
+                    ctx.accounts.fee_vault.key,
+                    protocol_fee,
+                ),
+                &[
+                    ctx.accounts.pool_vault.to_account_info(),
+                    ctx.accounts.fee_vault.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                &[vault_seeds],
+            )?;
+            
+            pool.total_fees_collected = pool.total_fees_collected.checked_add(protocol_fee)
+                .ok_or(WhistleError::ArithmeticOverflow)?;
+        }
 
         // SECURITY FIX: Use checked_sub to prevent underflow
         pool.total_shielded = pool.total_shielded
@@ -297,6 +357,7 @@ pub mod whistle_pool {
         emit!(Unshielded {
             nullifier_hash,
             withdrawal_amount,
+            protocol_fee,
             has_change,
             timestamp: Clock::get()?.unix_timestamp,
         });
@@ -841,6 +902,7 @@ pub struct PoolState {
     pub current_root: [u8; 32],
     pub total_deposits: u64,
     pub total_shielded: u64,  // Currently shielded balance
+    pub total_fees_collected: u64, // Protocol fees for point holder rewards
     pub bump: u8,
 }
 
@@ -1033,13 +1095,21 @@ pub struct Shield<'info> {
     )]
     pub roots_history: AccountLoader<'info, RootsHistory>,
     
-    /// CHECK: Vault PDA
+    /// CHECK: Vault PDA for shielded funds
     #[account(
         mut,
         seeds = [b"vault"],
         bump
     )]
     pub pool_vault: SystemAccount<'info>,
+    
+    /// CHECK: Fee vault PDA for protocol fees (point holder rewards)
+    #[account(
+        mut,
+        seeds = [b"fee_vault"],
+        bump
+    )]
+    pub fee_vault: SystemAccount<'info>,
     
     #[account(mut)]
     pub depositor: Signer<'info>,
@@ -1077,13 +1147,21 @@ pub struct Unshield<'info> {
     )]
     pub roots_history: AccountLoader<'info, RootsHistory>,
     
-    /// CHECK: Vault PDA
+    /// CHECK: Vault PDA for shielded funds
     #[account(
         mut,
         seeds = [b"vault"],
         bump
     )]
     pub pool_vault: SystemAccount<'info>,
+    
+    /// CHECK: Fee vault PDA for protocol fees (point holder rewards)
+    #[account(
+        mut,
+        seeds = [b"fee_vault"],
+        bump
+    )]
+    pub fee_vault: SystemAccount<'info>,
     
     /// CHECK: Recipient receives SOL
     #[account(mut)]
@@ -1192,6 +1270,7 @@ pub struct Shielded {
     pub commitment: [u8; 32],
     pub leaf_index: u64,
     pub amount: u64,
+    pub protocol_fee: u64,
     pub timestamp: i64,
 }
 
@@ -1199,6 +1278,7 @@ pub struct Shielded {
 pub struct Unshielded {
     pub nullifier_hash: [u8; 32],
     pub withdrawal_amount: u64,
+    pub protocol_fee: u64,
     pub has_change: bool,
     pub timestamp: i64,
 }
