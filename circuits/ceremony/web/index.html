@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Whistle Protocol - Trusted Setup Ceremony</title>
-  <script src="https://cdn.jsdelivr.net/npm/snarkjs@0.7.4/build/snarkjs.min.js"></script>
+  <title>Whistle Protocol - Trusted Setup Ceremony Complete</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -25,7 +24,7 @@
       font-size: 1.5rem;
       text-align: center;
       margin-bottom: 0.5rem;
-      color: #f59e0b;
+      color: #10b981;
       letter-spacing: 0.2em;
     }
     
@@ -34,6 +33,46 @@
       color: #666;
       margin-bottom: 2rem;
       font-size: 0.9rem;
+    }
+    
+    .celebration {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(245, 158, 11, 0.1));
+      border: 2px solid #10b981;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .celebration::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .celebration-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .celebration h2 {
+      font-size: 1.8rem;
+      color: #10b981;
+      margin-bottom: 0.5rem;
+    }
+    
+    .celebration p {
+      color: #888;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
     }
     
     .stats {
@@ -46,22 +85,23 @@
     .stat {
       background: #111;
       border: 1px solid #222;
-      padding: 1rem;
+      padding: 1.5rem;
       text-align: center;
-      border-radius: 8px;
+      border-radius: 12px;
     }
     
     .stat-value {
-      font-size: 1.5rem;
+      font-size: 2rem;
       font-weight: bold;
       color: #10b981;
     }
     
     .stat-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #666;
       text-transform: uppercase;
       letter-spacing: 0.1em;
+      margin-top: 0.5rem;
     }
     
     .panel {
@@ -78,6 +118,40 @@
       color: #f59e0b;
     }
     
+    .thank-you-message {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .thank-you-message h3 {
+      color: #f59e0b;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .thank-you-message p {
+      color: #888;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    
+    .next-steps {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .next-steps h2 {
+      color: #f59e0b;
+      margin-bottom: 1rem;
+    }
+    
     .step {
       display: flex;
       align-items: flex-start;
@@ -88,164 +162,86 @@
       border-radius: 8px;
     }
     
-    .step-number {
-      width: 30px;
-      height: 30px;
-      background: #f59e0b;
-      color: #000;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
+    .step-icon {
+      font-size: 1.5rem;
       flex-shrink: 0;
     }
     
-    .step-content h3 { font-size: 0.9rem; margin-bottom: 0.25rem; }
-    .step-content p { font-size: 0.8rem; color: #888; }
-    
-    .entropy-box {
-      background: #000;
-      border: 2px solid #333;
-      border-radius: 8px;
-      padding: 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 1rem;
+    .step-content h3 { 
+      font-size: 0.9rem; 
+      margin-bottom: 0.25rem; 
+      color: #fff;
+    }
+    .step-content p { 
+      font-size: 0.8rem; 
+      color: #888; 
     }
     
-    .entropy-box:hover { border-color: #f59e0b; }
-    .entropy-box.active {
-      border-color: #10b981;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-    }
-    .entropy-box.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .links {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
     }
     
-    .entropy-display {
-      font-family: monospace;
-      font-size: 1.5rem;
-      letter-spacing: 0.2em;
-      margin: 1rem 0;
-      min-height: 2rem;
-      color: #10b981;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 8px;
+    .link-btn {
+      padding: 0.75rem 1.5rem;
       background: #222;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 1rem 0;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #f59e0b, #10b981);
-      width: 0%;
-      transition: width 0.3s;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    
-    .btn-primary { background: #f59e0b; color: #000; }
-    .btn-primary:hover { background: #fbbf24; transform: translateY(-2px); }
-    .btn-primary:disabled {
-      background: #444;
-      color: #888;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .btn-success { background: #10b981; color: #000; }
-    
-    .status {
-      text-align: center;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-top: 1rem;
-    }
-    
-    .status.success {
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid #10b981;
-      color: #10b981;
-    }
-    
-    .status.error {
-      background: rgba(239, 68, 68, 0.2);
-      border: 1px solid #ef4444;
-      color: #ef4444;
-    }
-    
-    .status.info {
-      background: rgba(59, 130, 246, 0.2);
-      border: 1px solid #3b82f6;
-      color: #3b82f6;
-    }
-    
-    .hash {
-      font-family: monospace;
-      font-size: 0.65rem;
-      word-break: break-all;
-      background: #000;
-      padding: 0.5rem;
-      border-radius: 4px;
-      margin-top: 0.5rem;
-    }
-    
-    .log-area {
-      background: #000;
       border: 1px solid #333;
       border-radius: 8px;
-      padding: 1rem;
-      max-height: 200px;
-      overflow-y: auto;
-      font-size: 0.75rem;
-      font-family: monospace;
-      margin-top: 1rem;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.3s;
     }
     
-    .log-entry { margin-bottom: 0.25rem; }
-    .log-entry.info { color: #3b82f6; }
-    .log-entry.success { color: #10b981; }
-    .log-entry.error { color: #ef4444; }
-    .log-entry.warn { color: #f59e0b; }
+    .link-btn:hover {
+      background: #333;
+      border-color: #f59e0b;
+    }
+    
+    .link-btn.primary {
+      background: #f59e0b;
+      color: #000;
+      border-color: #f59e0b;
+    }
+    
+    .link-btn.primary:hover {
+      background: #fbbf24;
+    }
     
     .security-note {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
       padding: 1rem;
       border-radius: 8px;
       font-size: 0.8rem;
-      color: #f59e0b;
-    }
-    
-    .download-section {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: #0a0a0a;
-      border-radius: 8px;
+      color: #10b981;
       text-align: center;
     }
     
-    #entropyArea { outline: none; }
+    .closed-badge {
+      display: inline-block;
+      background: #10b981;
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
     
-    .hidden { display: none; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .celebration-icon {
+      animation: float 3s ease-in-out infinite;
+    }
   </style>
 </head>
 <body>
@@ -253,393 +249,107 @@
     <h1>⬢ WHISTLE CEREMONY</h1>
     <p class="subtitle">Trusted Setup for ZK Privacy Pool</p>
     
+    <!-- Celebration Banner -->
+    <div class="celebration">
+      <span class="closed-badge">✓ Ceremony Complete</span>
+      <div class="celebration-icon">🎉</div>
+      <h2>Congratulations!</h2>
+      <p>The trusted setup ceremony has been successfully completed.</p>
+    </div>
+    
     <!-- Stats -->
     <div class="stats">
       <div class="stat">
         <div class="stat-value" id="contributorCount">-</div>
-        <div class="stat-label">Contributors</div>
+        <div class="stat-label">Total Contributors</div>
       </div>
       <div class="stat">
         <div class="stat-value" id="latestContrib">-</div>
-        <div class="stat-label">Latest #</div>
+        <div class="stat-label">Contributions</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="ceremonyStatus">Loading</div>
+        <div class="stat-value" id="ceremonyStatus">Complete</div>
         <div class="stat-label">Status</div>
       </div>
     </div>
     
-    <!-- How it works -->
-    <div class="panel">
-      <h2>How It Works</h2>
+    <!-- Thank You Message -->
+    <div class="thank-you-message">
+      <h3>🙏 Thank You to All Contributors</h3>
+      <p>
+        Every contribution added a layer of security to Whistle Protocol's ZK privacy pool.
+        Because of your participation, no single party — including us — can compromise the system.
+        <br><br>
+        <strong>Your randomness made this possible.</strong>
+      </p>
+    </div>
+    
+    <!-- What's Next -->
+    <div class="next-steps">
+      <h2>What Happens Now</h2>
+      
       <div class="step">
-        <div class="step-number">1</div>
+        <div class="step-icon">🔐</div>
         <div class="step-content">
-          <h3>Add Randomness</h3>
-          <p>Type random characters - your keyboard timing becomes entropy</p>
+          <h3>Final Keys Generated</h3>
+          <p>The proving and verification keys from the ceremony are now being deployed</p>
         </div>
       </div>
+      
       <div class="step">
-        <div class="step-number">2</div>
+        <div class="step-icon">🚀</div>
         <div class="step-content">
-          <h3>Generate Contribution</h3>
-          <p>snarkjs runs in your browser to create a cryptographic contribution</p>
+          <h3>Mainnet Deployment</h3>
+          <p>The ZK privacy pool is being deployed to Solana mainnet</p>
         </div>
       </div>
+      
       <div class="step">
-        <div class="step-number">3</div>
+        <div class="step-icon">🛡️</div>
         <div class="step-content">
-          <h3>Download & Submit</h3>
-          <p>Download your contribution file and submit it</p>
+          <h3>Privacy Pool Live</h3>
+          <p>Users can now shield and unshield funds with cryptographic privacy</p>
         </div>
       </div>
     </div>
     
-    <!-- Contribution Area -->
-    <div class="panel">
-      <h2>Your Contribution</h2>
-      
-      <!-- Step 1: Entropy -->
-      <div id="entropySection">
-        <div 
-          id="entropyArea" 
-          class="entropy-box" 
-          tabindex="0"
-        >
-          <p style="color: #666; margin-bottom: 1rem;">Click here and type randomly</p>
-          <div class="entropy-display" id="entropyDisplay">_ _ _ _ _ _ _ _</div>
-          <p style="color: #666; font-size: 0.8rem;">Entropy: <span id="entropyCount">0</span> / 512 bytes</p>
-        </div>
-        
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-      </div>
-      
-      <!-- Step 2: Generate -->
-      <button class="btn btn-primary" id="generateBtn" disabled>
-        Step 1: Collect Entropy First
-      </button>
-      
-      <!-- Log Area -->
-      <div class="log-area" id="logArea">
-        <div class="log-entry info">Ready. Click the box above and start typing randomly.</div>
-      </div>
-      
-      <!-- Status/Result -->
-      <div id="statusArea"></div>
-      
-      <!-- Upload/Download Section (hidden until complete) -->
-      <div id="downloadSection" class="download-section hidden">
-        <p style="margin-bottom: 1rem; color: #10b981;">✅ Contribution generated!</p>
-        
-        <button class="btn btn-success" id="uploadBtn" style="margin-bottom: 0.5rem;">
-          ↑ Submit Contribution
-        </button>
-        
-        <button class="btn btn-primary" id="downloadBtn" style="background: #333; margin-top: 0.5rem;">
-          ↓ Download File (backup)
-        </button>
-        
-        <div id="uploadStatus" style="margin-top: 1rem;"></div>
+    <!-- Links -->
+    <div class="panel" style="text-align: center;">
+      <h2>Explore Whistle Protocol</h2>
+      <div class="links">
+        <a href="https://whistle.ninja" class="link-btn primary">Launch App</a>
+        <a href="https://github.com/DylanPort/Whistle-----Privacy-Protocol-Demo" class="link-btn">View Source</a>
+        <a href="https://twitter.com/whisaborNot" class="link-btn">Follow Updates</a>
       </div>
     </div>
     
     <!-- Security Note -->
     <div class="security-note">
-      <strong>🔐 Security:</strong> All computation happens in your browser. 
-      Your random input is never transmitted - only the resulting contribution file.
-      <a href="https://github.com/DylanPort/Whistle-----Privacy-Protocol-Demo/tree/main/circuits/ceremony" style="color: #f59e0b;">View source code</a>
+      <strong>🔐 Security Guarantee:</strong> With <span id="contributorCountInline">multiple</span> independent contributors, 
+      the ceremony is secure as long as at least ONE participant was honest and deleted their entropy.
+      <br><br>
+      <a href="https://github.com/DylanPort/Whistle-----Privacy-Protocol-Demo/tree/main/circuits/ceremony" style="color: #10b981;">View ceremony source code & verification</a>
     </div>
   </div>
   
   <script>
-    // Configuration
-    const CEREMONY_BASE_URL = '/contributions';
-    const CEREMONY_API_URL = '/api'; // Will be proxied by nginx
-    const REQUIRED_ENTROPY = 512;
-    const CIRCUIT_NAME = 'withdraw_merkle';
-    
-    // State
-    let entropy = [];
-    let entropyBytes = 0;
-    let isGenerating = false;
-    let contributionBlob = null;
-    let contributionNumber = 0;
-    let contributionHash = '';
-    let outputFilename = '';
-    
-    // Elements
-    const entropyArea = document.getElementById('entropyArea');
-    const entropyDisplay = document.getElementById('entropyDisplay');
-    const entropyCount = document.getElementById('entropyCount');
-    const progressFill = document.getElementById('progressFill');
-    const generateBtn = document.getElementById('generateBtn');
-    const logArea = document.getElementById('logArea');
-    const statusArea = document.getElementById('statusArea');
-    const downloadSection = document.getElementById('downloadSection');
-    const downloadBtn = document.getElementById('downloadBtn');
-    
-    // Logging
-    function log(message, type = 'info') {
-      const entry = document.createElement('div');
-      entry.className = `log-entry ${type}`;
-      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-      logArea.appendChild(entry);
-      logArea.scrollTop = logArea.scrollHeight;
-    }
-    
-    // Entropy collection
-    entropyArea.addEventListener('focus', () => {
-      if (!isGenerating) entropyArea.classList.add('active');
-    });
-    
-    entropyArea.addEventListener('blur', () => {
-      entropyArea.classList.remove('active');
-    });
-    
-    entropyArea.addEventListener('click', () => {
-      if (!isGenerating) entropyArea.focus();
-    });
-    
-    entropyArea.addEventListener('keydown', (e) => {
-      if (isGenerating) return;
-      e.preventDefault();
-      
-      const timing = performance.now();
-      const keyCode = e.keyCode || e.which;
-      entropy.push(`${e.key}:${timing}:${keyCode}`);
-      entropyBytes = entropy.length * 8;
-      
-      updateEntropyDisplay();
-    });
-    
-    function updateEntropyDisplay() {
-      entropyCount.textContent = Math.min(entropyBytes, REQUIRED_ENTROPY);
-      
-      const progress = Math.min(100, (entropyBytes / REQUIRED_ENTROPY) * 100);
-      progressFill.style.width = progress + '%';
-      
-      const display = entropy.slice(-8).map(() => '*').join(' ');
-      entropyDisplay.textContent = display || '_ _ _ _ _ _ _ _';
-      
-      if (entropyBytes >= REQUIRED_ENTROPY) {
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Step 2: Generate Contribution';
-        if (!entropy.logged) {
-          log('Sufficient entropy collected! Click the button to generate.', 'success');
-          entropy.logged = true;
-        }
-      }
-    }
-    
-    // Utility: Convert ArrayBuffer to hex
-    function bufferToHex(buffer) {
-      return Array.from(new Uint8Array(buffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-    }
-    
-    // Generate contribution using snarkjs
-    generateBtn.addEventListener('click', async () => {
-      if (entropyBytes < REQUIRED_ENTROPY) return;
-      if (isGenerating) return;
-      
-      isGenerating = true;
-      generateBtn.disabled = true;
-      generateBtn.textContent = 'Generating... Please wait';
-      entropyArea.classList.remove('active');
-      entropyArea.classList.add('disabled');
-      
-      try {
-        // Step 1: Create entropy string
-        log('Mixing entropy sources...', 'info');
-        const entropyString = entropy.join('|') + '|' + Date.now() + '|' + Math.random() + '|' + crypto.getRandomValues(new Uint32Array(8)).join('');
-        
-        // Hash the entropy
-        const encoder = new TextEncoder();
-        const entropyData = encoder.encode(entropyString);
-        const entropyHash = await crypto.subtle.digest('SHA-256', entropyData);
-        const entropyHex = bufferToHex(entropyHash);
-        log(`Entropy hash: ${entropyHex.slice(0, 16)}...`, 'info');
-        
-        // Step 2: Fetch latest contribution info
-        log('Fetching ceremony state...', 'info');
-        let latestNumber = 0;
-        
-        try {
-          const response = await fetch(`${CEREMONY_BASE_URL}/latest.json`);
-          if (response.ok) {
-            const data = await response.json();
-            latestNumber = data.number || 0;
-          }
-        } catch (e) {
-          log('Using genesis contribution...', 'warn');
-        }
-        
-        contributionNumber = latestNumber + 1;
-        const inputFilename = `${CIRCUIT_NAME}_${String(latestNumber).padStart(4, '0')}.zkey`;
-        outputFilename = `${CIRCUIT_NAME}_${String(contributionNumber).padStart(4, '0')}.zkey`;
-        
-        log(`Building on contribution #${latestNumber}`, 'info');
-        
-        // Step 3: Download the zkey
-        log('Downloading current zkey (~2.6 MB)...', 'info');
-        const zkeyUrl = `${CEREMONY_BASE_URL}/${inputFilename}`;
-        const zkeyResponse = await fetch(zkeyUrl);
-        if (!zkeyResponse.ok) {
-          throw new Error(`Failed to download zkey: ${zkeyResponse.status}`);
-        }
-        const zkeyArrayBuffer = await zkeyResponse.arrayBuffer();
-        const zkeyBytes = new Uint8Array(zkeyArrayBuffer);
-        log(`Downloaded ${(zkeyBytes.length / 1024 / 1024).toFixed(2)} MB`, 'success');
-        
-        // Step 4: Run snarkjs contribute
-        log('Running snarkjs.zKey.contribute()...', 'info');
-        log('This may take 30-60 seconds...', 'warn');
-        
-        // The browser version of snarkjs.zKey.contribute takes:
-        // - input zkey as { type: "mem", data: Uint8Array }
-        // - output as { type: "mem" }
-        // - contributorName
-        // - entropy string
-        
-        const inputZkey = { type: "mem", data: zkeyBytes };
-        const outputZkey = { type: "mem" };
-        const contributorName = `Whistle Ceremony Web #${contributionNumber}`;
-        
-        // Run the contribution
-        contributionHash = await snarkjs.zKey.contribute(
-          inputZkey,
-          outputZkey,
-          contributorName,
-          entropyHex
-        );
-        
-        log('Contribution generated!', 'success');
-        log(`Hash: ${contributionHash.slice(0, 32)}...`, 'info');
-        
-        // Step 5: Create downloadable file
-        contributionBlob = new Blob([outputZkey.data], { type: 'application/octet-stream' });
-        
-        // Show success
-        generateBtn.textContent = '✅ Contribution Complete!';
-        generateBtn.classList.remove('btn-primary');
-        generateBtn.classList.add('btn-success');
-        
-        downloadSection.classList.remove('hidden');
-        
-        const uploadBtn = document.getElementById('uploadBtn');
-        const uploadStatus = document.getElementById('uploadStatus');
-        
-        // Upload handler
-        uploadBtn.onclick = async () => {
-          uploadBtn.disabled = true;
-          uploadBtn.textContent = 'Uploading...';
-          uploadStatus.innerHTML = '<p style="color: #3b82f6;">Uploading contribution...</p>';
-          
-          try {
-            const formData = new FormData();
-            formData.append('contribution', contributionBlob, outputFilename);
-            formData.append('contributionHash', contributionHash);
-            
-            const response = await fetch(`${CEREMONY_API_URL}/upload`, {
-              method: 'POST',
-              body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-              uploadStatus.innerHTML = `
-                <div style="background: rgba(16,185,129,0.2); border: 1px solid #10b981; padding: 1rem; border-radius: 8px; color: #10b981;">
-                  <strong>✅ Submitted Successfully!</strong>
-                  <p style="margin-top: 0.5rem; font-size: 0.85rem;">
-                    Contribution #${result.number} recorded.<br>
-                    Thank you for securing Whistle Protocol!
-                  </p>
-                </div>
-              `;
-              uploadBtn.textContent = '✓ Submitted';
-              uploadBtn.style.background = '#10b981';
-              log(`Contribution #${result.number} submitted!`, 'success');
-              
-              // Refresh stats
-              fetchStats();
-            } else {
-              throw new Error(result.error || 'Upload failed');
-            }
-          } catch (error) {
-            uploadStatus.innerHTML = `
-              <div style="background: rgba(239,68,68,0.2); border: 1px solid #ef4444; padding: 1rem; border-radius: 8px; color: #ef4444;">
-                <strong>Upload failed:</strong> ${error.message}<br>
-                <span style="font-size: 0.8rem;">Please download and submit manually.</span>
-              </div>
-            `;
-            uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Try Again';
-            log(`Upload failed: ${error.message}`, 'error');
-          }
-        };
-        
-        // Download handler (backup)
-        downloadBtn.onclick = () => {
-          const url = URL.createObjectURL(contributionBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = outputFilename;
-          a.click();
-          URL.revokeObjectURL(url);
-          log(`Downloaded: ${outputFilename}`, 'success');
-        };
-        
-        statusArea.innerHTML = `
-          <div class="status success">
-            <strong>✅ Contribution #${contributionNumber} Generated!</strong>
-            <div class="hash">Hash: ${contributionHash}</div>
-            <p style="margin-top: 0.5rem; font-size: 0.8rem;">
-              Download the file above and submit it to complete your contribution.
-            </p>
-          </div>
-        `;
-        
-        log('🎉 Thank you for securing Whistle Protocol!', 'success');
-        
-      } catch (error) {
-        console.error('Contribution error:', error);
-        log(`Error: ${error.message}`, 'error');
-        
-        statusArea.innerHTML = `
-          <div class="status error">
-            <strong>❌ Error</strong>
-            <p>${error.message}</p>
-            <p style="margin-top: 0.5rem; font-size: 0.8rem;">
-              Try the CLI tool: <code style="background:#222;padding:2px 6px;border-radius:4px;">npx @whistle/ceremony contribute</code>
-            </p>
-          </div>
-        `;
-        
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Try Again';
-        isGenerating = false;
-        entropyArea.classList.remove('disabled');
-      }
-    });
-    
     // Fetch ceremony stats
     async function fetchStats() {
       try {
-        const response = await fetch(`${CEREMONY_BASE_URL}/stats.json`);
+        const response = await fetch('/contributions/stats.json');
         if (response.ok) {
           const stats = await response.json();
-          document.getElementById('contributorCount').textContent = stats.count || 0;
+          const count = stats.count || 0;
+          document.getElementById('contributorCount').textContent = count;
           document.getElementById('latestContrib').textContent = stats.latest || 0;
-          document.getElementById('ceremonyStatus').textContent = stats.status || 'Active';
+          document.getElementById('ceremonyStatus').textContent = 'Complete';
+          document.getElementById('contributorCountInline').textContent = count;
         }
       } catch (e) {
-        document.getElementById('ceremonyStatus').textContent = 'Active';
-        document.getElementById('contributorCount').textContent = '0';
-        document.getElementById('latestContrib').textContent = '0';
+        document.getElementById('ceremonyStatus').textContent = 'Complete';
+        document.getElementById('contributorCount').textContent = '1';
+        document.getElementById('latestContrib').textContent = '1';
+        document.getElementById('contributorCountInline').textContent = '1';
       }
     }
     
