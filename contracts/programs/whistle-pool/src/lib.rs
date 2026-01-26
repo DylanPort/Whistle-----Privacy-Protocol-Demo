@@ -50,8 +50,8 @@ pub mod whistle_pool {
 
     /// Initialize pool state only (step 1)
     pub fn initialize(ctx: Context<InitializePool>, merkle_levels: u8) -> Result<()> {
-        // Match circuit tree depth (devnet/prod config)
-        require!(merkle_levels == 7, WhistleError::InvalidMerkleLevels);
+        // Match circuit tree depth (7 for devnet, 13 for mainnet)
+        require!(merkle_levels >= 7 && merkle_levels <= 13, WhistleError::InvalidMerkleLevels);
         
         let pool = &mut ctx.accounts.pool;
         pool.merkle_levels = merkle_levels;
@@ -583,8 +583,6 @@ pub mod whistle_pool {
         relayer_fee: u64,
         merkle_root: [u8; 32],  // SECURITY FIX: Added Merkle root validation
     ) -> Result<()> {
-        msg!("=== ZK WITHDRAWAL START ===");
-        
         // Validate denomination
         require!(
             amount == DENOM_001_SOL || amount == DENOM_005_SOL || amount == DENOM_01_SOL ||
@@ -603,19 +601,16 @@ pub mod whistle_pool {
             merkle_root == pool.current_root || roots.contains(&merkle_root),
             WhistleError::InvalidMerkleRoot
         );
-        msg!("✓ Merkle root validated");
 
         // Check nullifier not already spent (prevents double-spend)
         require!(
             !nullifiers.is_spent(&nullifier_hash),
             WhistleError::NullifierAlreadyUsed
         );
-        msg!("✓ Nullifier not spent");
 
-        // SECURITY FIX: Verify vault has sufficient balance
+        // Verify vault has sufficient balance
         let vault_balance = ctx.accounts.pool_vault.lamports();
         require!(vault_balance >= amount, WhistleError::InsufficientVaultBalance);
-        msg!("✓ Vault balance sufficient");
 
         // Prepare recipient as field element (truncate to 31 bytes to fit BN254 field)
         let recipient_bytes = recipient.to_bytes();
@@ -623,7 +618,6 @@ pub mod whistle_pool {
         recipient_field[1..].copy_from_slice(&recipient_bytes[..31]);
         
         // Verify the Groth16 ZK proof
-        msg!("Verifying Groth16 proof...");
         let proof_valid = verify_withdraw_proof_groth16(
             &proof_a,
             &proof_b,
@@ -636,7 +630,6 @@ pub mod whistle_pool {
         )?;
 
         require!(proof_valid, WhistleError::InvalidProof);
-        msg!("✓ ZK proof verified");
 
         // Mark nullifier as spent
         nullifiers.mark_spent(&nullifier_hash)?;
@@ -689,8 +682,6 @@ pub mod whistle_pool {
             amount,
             timestamp: Clock::get()?.unix_timestamp,
         });
-
-        msg!("ZK withdrawal: {} lamports verified and transferred", amount);
 
         Ok(())
     }
@@ -853,21 +844,19 @@ pub struct PoolState {
     pub bump: u8,
 }
 
-// SECURITY FIX: Increased MerkleTree capacity from 64 to 2048 nodes
-// This supports 10 levels = 1024 leaves (deposits)
-// For production, consider using a more scalable data structure
-// 7 levels => 128 leaves, 255 total nodes (+1 padding for Pod)
+// MAINNET: 13 levels => 8192 leaves (deposits), 16384 total nodes
+// ~512KB account size - requires larger account allocation
 #[account(zero_copy)]
 #[repr(C)]
 pub struct MerkleTree {
     pub levels_used: u8,
     pub _padding: [u8; 7],
-    pub nodes: [[u8; 32]; 256],
+    pub nodes: [[u8; 32]; 16384],
 }
 
 impl MerkleTree {
     pub fn insert_leaf(&mut self, leaf: [u8; 32], index: u64, levels: u8) {
-        let levels = levels.min(7); // 7 levels max for this tree (128 leaves)
+        let levels = levels.min(13); // 13 levels max for mainnet (8192 leaves)
         let leaf_offset = (1u64 << levels) - 1;
         let leaf_pos = (leaf_offset + index) as usize;
         
@@ -894,13 +883,13 @@ impl MerkleTree {
     }
 }
 
-// Reduced size for devnet testing (32 roots history)
+// MAINNET: 100 roots history for better reliability
 #[account(zero_copy)]
 #[repr(C)]
 pub struct RootsHistory {
     pub current_index: u8,
     pub _padding: [u8; 31],
-    pub roots: [[u8; 32]; 32], // 32 roots history
+    pub roots: [[u8; 32]; 100], // 100 roots history for mainnet
 }
 
 impl RootsHistory {
@@ -913,18 +902,18 @@ impl RootsHistory {
     }
 }
 
-// Reduced size for devnet testing (64 nullifiers = ~2KB)
+// MAINNET: 4096 nullifiers = ~128KB (supports 4096 withdrawals)
 #[account(zero_copy)]
 #[repr(C)]
 pub struct NullifierSet {
     pub count: u64,
-    pub nullifiers: [[u8; 32]; 64], // 64 nullifiers for testing
+    pub nullifiers: [[u8; 32]; 4096], // 4096 nullifiers for mainnet
 }
 
 impl NullifierSet {
     pub fn is_spent(&self, nullifier: &[u8; 32]) -> bool {
         for i in 0..self.count as usize {
-            if i < 64 && self.nullifiers[i] == *nullifier {
+            if i < 4096 && self.nullifiers[i] == *nullifier {
                 return true;
             }
         }
@@ -932,7 +921,7 @@ impl NullifierSet {
     }
     
     pub fn mark_spent(&mut self, nullifier: &[u8; 32]) -> Result<()> {
-        require!((self.count as usize) < 64, WhistleError::NullifierSetFull);
+        require!((self.count as usize) < 4096, WhistleError::NullifierSetFull);
         self.nullifiers[self.count as usize] = *nullifier;
         self.count += 1;
         Ok(())
@@ -1249,7 +1238,7 @@ pub struct PrivateTransferCompleted {
 
 #[error_code]
 pub enum WhistleError {
-    #[msg("Invalid Merkle tree levels (must be 10-20)")]
+    #[msg("Invalid Merkle tree levels (must be 7-13)")]
     InvalidMerkleLevels,
     
     #[msg("Amount too small (minimum 0.01 SOL)")]

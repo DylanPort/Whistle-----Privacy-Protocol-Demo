@@ -125,7 +125,6 @@ pub fn verify_withdraw_proof_groth16(
     amount: u64,
     relayer_fee: u64,
 ) -> anchor_lang::Result<bool> {
-    msg!("ZK Verify (withdraw_simple)...");
     
     let mut amount_bytes = [0u8; 32];
     amount_bytes[24..].copy_from_slice(&amount.to_be_bytes());
@@ -145,15 +144,14 @@ pub fn verify_withdraw_proof_groth16(
     
     let mut verifier = Groth16Verifier::<NUM_PUBLIC_INPUTS>::new(
         proof_a, proof_b, proof_c, &public_inputs, &vk,
-    ).map_err(|e| { msg!("New: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+    ).map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.prepare_inputs()
-        .map_err(|e| { msg!("Prep: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.verify()
-        .map_err(|e| { msg!("Verify: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
-    msg!("✅ ZK verified (withdraw_simple)!");
     Ok(true)
 }
 
@@ -192,15 +190,16 @@ pub const WITHDRAW_MERKLE_VK_GAMMA_G2: [u8; 128] = [
     0xe3, 0xd1, 0xe7, 0x69, 0x0c, 0x43, 0xd3, 0x7b, 0x4c, 0xe6, 0xcc, 0x01, 0x66, 0xfa, 0x7d, 0xaa,
 ];
 
+// CEREMONY: Updated Delta G2 from ceremony final zkey (21 contributors)
 pub const WITHDRAW_MERKLE_VK_DELTA_G2: [u8; 128] = [
-    0x27, 0xf7, 0xeb, 0xeb, 0xa5, 0x2d, 0x22, 0x8f, 0xc1, 0x3f, 0xcb, 0xfb, 0x7e, 0x97, 0x62, 0x52,
-    0x5b, 0x5c, 0x98, 0x3c, 0x80, 0xf5, 0xe1, 0x70, 0x7b, 0x3c, 0xb3, 0x83, 0x45, 0x10, 0xd0, 0x3b,
-    0x2c, 0x44, 0x9c, 0x33, 0xce, 0x74, 0xbc, 0x87, 0x57, 0x57, 0x47, 0xb1, 0x3d, 0xe8, 0x2d, 0x0f,
-    0x23, 0xd9, 0xdf, 0x19, 0xbf, 0xe0, 0x08, 0x62, 0xf4, 0xb1, 0xcc, 0x25, 0x59, 0x44, 0xab, 0x02,
-    0x02, 0xa6, 0x17, 0x1b, 0xd8, 0x05, 0xda, 0xa3, 0x6d, 0xf4, 0x6f, 0xf4, 0xff, 0x16, 0xeb, 0x0d,
-    0xaa, 0x30, 0x57, 0x08, 0x88, 0x79, 0x4b, 0xaa, 0xf4, 0xb1, 0x9b, 0x36, 0x9f, 0x6c, 0x7b, 0x34,
-    0x0c, 0x70, 0xd3, 0x92, 0x84, 0x0c, 0x38, 0xb4, 0x5e, 0x1a, 0x4d, 0xe6, 0xf4, 0x60, 0x90, 0xac,
-    0xe1, 0xe3, 0xe7, 0x7d, 0xe8, 0x66, 0xdc, 0xa4, 0x1a, 0x13, 0x7e, 0x8f, 0x88, 0x10, 0x8d, 0x12,
+    0x2c, 0xe7, 0x51, 0x73, 0xd6, 0x3d, 0x93, 0xb5, 0x07, 0x8a, 0xcf, 0xa0, 0x3e, 0x8c, 0x22, 0xe7,
+    0x9d, 0x81, 0xb7, 0x48, 0xfd, 0x8a, 0x10, 0x41, 0xfc, 0xc6, 0xdb, 0xe8, 0x96, 0xe7, 0x4e, 0x1d,
+    0x08, 0xf0, 0x1c, 0xdb, 0xf6, 0x2e, 0xcb, 0x6e, 0x14, 0x14, 0x36, 0x4e, 0xe7, 0x29, 0xbd, 0x8f,
+    0x08, 0x5e, 0xb3, 0x35, 0x35, 0x04, 0xcf, 0x62, 0xf2, 0x44, 0x61, 0xa3, 0x5c, 0x25, 0x0e, 0xd7,
+    0x18, 0x85, 0x6b, 0x0b, 0x11, 0x3f, 0xce, 0xa9, 0x60, 0xbf, 0x46, 0x8c, 0x72, 0x95, 0x8b, 0xf0,
+    0x03, 0x8d, 0x77, 0x03, 0x2f, 0xb8, 0x2e, 0x64, 0xe3, 0x5e, 0x15, 0x15, 0x8e, 0x79, 0x1d, 0x23,
+    0x11, 0xf4, 0x23, 0x19, 0x98, 0xab, 0xdc, 0x14, 0xf0, 0xf6, 0x64, 0xb3, 0xac, 0xbe, 0xaa, 0x2a,
+    0x13, 0x8c, 0xa5, 0x0e, 0xaa, 0x0d, 0xff, 0x2e, 0xfa, 0xb1, 0xda, 0xf2, 0x04, 0x03, 0xb3, 0x3b,
 ];
 
 pub const WITHDRAW_MERKLE_IC_0: [u8; 64] = [
@@ -277,7 +276,6 @@ pub fn verify_withdraw_merkle_proof(
     amount: u64,
     relayer_fee: u64,
 ) -> anchor_lang::Result<bool> {
-    msg!("ZK Verify (withdraw_merkle)...");
     
     let mut amount_bytes = [0u8; 32];
     amount_bytes[24..].copy_from_slice(&amount.to_be_bytes());
@@ -297,15 +295,14 @@ pub fn verify_withdraw_merkle_proof(
     
     let mut verifier = Groth16Verifier::<WITHDRAW_MERKLE_NUM_PUBLIC_INPUTS>::new(
         proof_a, proof_b, proof_c, &public_inputs, &vk,
-    ).map_err(|e| { msg!("New: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+    ).map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.prepare_inputs()
-        .map_err(|e| { msg!("Prep: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.verify()
-        .map_err(|e| { msg!("Verify: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
-    msg!("✅ ZK verified (withdraw_merkle)!");
     Ok(true)
 }
 
@@ -438,7 +435,6 @@ pub fn verify_unshield_change_proof(
     relayer_fee: u64,
     change_commitment: &[u8; 32],
 ) -> anchor_lang::Result<bool> {
-    msg!("ZK Verify (unshield_change)...");
     
     let mut amount_bytes = [0u8; 32];
     amount_bytes[24..].copy_from_slice(&withdrawal_amount.to_be_bytes());
@@ -459,15 +455,14 @@ pub fn verify_unshield_change_proof(
     
     let mut verifier = Groth16Verifier::<UNSHIELD_CHANGE_NUM_PUBLIC_INPUTS>::new(
         proof_a, proof_b, proof_c, &public_inputs, &vk,
-    ).map_err(|e| { msg!("New: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+    ).map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.prepare_inputs()
-        .map_err(|e| { msg!("Prep: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.verify()
-        .map_err(|e| { msg!("Verify: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
-    msg!("✅ ZK verified (unshield_change)!");
     Ok(true)
 }
 
@@ -590,7 +585,6 @@ pub fn verify_private_transfer_proof(
     input_nullifier_hashes: &[[u8; 32]; 2],
     output_commitments: &[[u8; 32]; 2],
 ) -> anchor_lang::Result<bool> {
-    msg!("ZK Verify (private_transfer)...");
     
     // Pack public inputs: merkleRoot, nullHash1, nullHash2, outComm1, outComm2
     // But our circuit has 5 public inputs total, likely structured differently
@@ -607,14 +601,13 @@ pub fn verify_private_transfer_proof(
     
     let mut verifier = Groth16Verifier::<PRIVATE_TRANSFER_NUM_PUBLIC_INPUTS>::new(
         proof_a, proof_b, proof_c, &public_inputs, &vk,
-    ).map_err(|e| { msg!("New: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+    ).map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.prepare_inputs()
-        .map_err(|e| { msg!("Prep: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
     verifier.verify()
-        .map_err(|e| { msg!("Verify: {:?}", e); anchor_lang::error!(crate::WhistleError::InvalidProof) })?;
+        .map_err(|_| anchor_lang::error!(crate::WhistleError::InvalidProof))?;
     
-    msg!("✅ ZK verified (private_transfer)!");
     Ok(true)
 }
