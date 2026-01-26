@@ -182,7 +182,7 @@ This checks:
 | Phase | Duration | Status |
 |-------|----------|--------|
 | Genesis | Day 1 | Coordinator creates initial zkey |
-| Collection | 2-4 weeks | Community contributes |
+| Collection | few days | Community contributes |
 | Verification | 1 day | Verify all contributions |
 | Finalization | 1 day | Export final zkey |
 | Deployment | 1 day | Update contract & frontend |
